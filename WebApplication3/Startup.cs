@@ -51,6 +51,7 @@ namespace WebApplication3
                         Url = "https://example.com/license"
                     }
                 });
+                c.DocumentFilter<SwaggerSecurityRequirementsDocumentFilter>();
 
                 c.AddSecurityDefinition("Bearer", new ApiKeyScheme()
                 {

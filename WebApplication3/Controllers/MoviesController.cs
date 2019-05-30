@@ -23,14 +23,15 @@ namespace WebApplication3.Controllers
         /// </summary>
         /// <param name="from">date</param>
         /// <param name="to">date</param>
-        /// <returns>list of movies</returns>
+        /// <returns>A list of movie objects</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpGet]
         // ? permite unui struct sa ia si valoare null
-        public IEnumerable<MovieGetModel> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to)
+        public PaginatedList<MovieGetModel> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]int page = 1)
         {
-            return movieService.GetAll(from,to);
+            page = Math.Max(page, 1);
+            return movieService.GetAll(page, from,to);
         }
 
         /// <summary>

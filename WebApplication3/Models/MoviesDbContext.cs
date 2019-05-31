@@ -13,6 +13,7 @@ namespace WebApplication3.Models
             builder.Entity<User>(entity => {
                 entity.HasIndex(u => u.Username).IsUnique();
             });
+
         }
 
         public DbSet<Movie> Movies { get; set; }

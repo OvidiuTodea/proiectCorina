@@ -46,6 +46,13 @@ namespace WebApplication3.Services
             {
                 return null;
             }
+
+            // o varianta de a sterge si comentariile odata cu filmul
+            foreach (var Comment in existing.Comments)
+            {
+                context.Comments.Remove(Comment);
+            }
+
             context.Movies.Remove(existing);
             context.SaveChanges();
 

@@ -14,9 +14,11 @@ namespace WebApplication3.Controllers
     public class MoviesController : ControllerBase
     {
         private IMovieService movieService;
-        public MoviesController(IMovieService movieService)
+        private IUsersService usersService;
+        public MoviesController(IMovieService movieService,IUsersService usersService)
         {
             this.movieService = movieService;
+            this.usersService = usersService;
         }
         /// <summary>
         /// Get all the movies
@@ -82,7 +84,8 @@ namespace WebApplication3.Controllers
         [HttpPost]
         public void Post([FromBody] Movie movie)
         {
-            movieService.Create(movie);
+            User addedBy = usersService.GetCurrentUser(HttpContext);
+            movieService.Create(movie, addedBy);
         }
         /// <summary>
         /// Updates or creates a movie with a given id

@@ -27,5 +27,6 @@ namespace WebApplication3.Models
         public int Rating { get; set; }
         public bool Watched { get; set; }
         public List<Comment> Comments { get; set; }
+        public User Owner { get; set; }
     }
 }

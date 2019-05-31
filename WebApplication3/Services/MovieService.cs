@@ -17,7 +17,7 @@ namespace WebApplication3.Services
         /// <returns></returns>
         PaginatedList<MovieGetModel> GetAll(int page, DateTime? from = null, DateTime? to = null);
         Movie GetById(int id);
-        Movie Create(Movie movie);
+        Movie Create(Movie movie, User addedBy);
         Movie Upsert(int id, Movie movie);
         Movie Delete(int id);
     }
@@ -29,10 +29,11 @@ namespace WebApplication3.Services
             this.context = context;
         }
 
-        public Movie Create(Movie movie)
+        public Movie Create(Movie movie, User addedBy)
         {
-            
+           // Movie toAdd = MoviePostModel.ToMovie(movie);
             context.Movies.Add(movie);
+            movie.Owner = addedBy;
             context.SaveChanges();
             return movie;
         }

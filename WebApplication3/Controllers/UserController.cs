@@ -49,6 +49,7 @@ namespace WebApplication3.Controllers
             return Ok(user);
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult GetAll()
         {

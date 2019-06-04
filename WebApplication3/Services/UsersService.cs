@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -16,10 +17,15 @@ namespace WebApplication3.Services
 {
     public interface IUsersService
     {
-        UserGetModel Authenticate(string username, string password);
-        UserGetModel Register(RegisterPostModel registerInfo);
+        LoginGetModel Authenticate(string username, string password);
+        LoginGetModel Register(RegisterPostModel registerInfo);
         User GetCurrentUser(HttpContext httpContext);
-        IEnumerable<UserGetModel> GetAll();
+        IEnumerable<LoginGetModel> GetAll();
+
+        UserGetModel GetById(int id);
+        UserGetModel Create(UserPostModel userPostModel);
+        UserGetModel Upsert(int id, UserPostModel userPostModel);
+        UserGetModel Delete(int id);
     }
 
     public class UsersService : IUsersService
@@ -33,7 +39,7 @@ namespace WebApplication3.Services
             this.appSettings = appSettings.Value;
         }
 
-        public UserGetModel Authenticate(string username, string password)
+        public LoginGetModel Authenticate(string username, string password)
         {
             var user = context.Users
                 .SingleOrDefault(x => x.Username == username &&
@@ -59,7 +65,7 @@ namespace WebApplication3.Services
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            var result = new UserGetModel
+            var result = new LoginGetModel
             {
                 Id = user.Id,
                 Email = user.Email,
@@ -89,7 +95,7 @@ namespace WebApplication3.Services
             }
         }
 
-        public UserGetModel Register(RegisterPostModel registerInfo)
+        public LoginGetModel Register(RegisterPostModel registerInfo)
         {
             User existing = context.Users.FirstOrDefault(u => u.Username == registerInfo.Username);
             if (existing != null)
@@ -110,10 +116,10 @@ namespace WebApplication3.Services
             return Authenticate(registerInfo.Username, registerInfo.Password);
         }
 
-        public IEnumerable<UserGetModel> GetAll()
+        public IEnumerable<LoginGetModel> GetAll()
         {
             // return users without passwords
-            return context.Users.Select(user => new UserGetModel
+            return context.Users.Select(user => new LoginGetModel
             {
                 Id = user.Id,
                 Email = user.Email,
@@ -130,5 +136,59 @@ namespace WebApplication3.Services
             return context.Users.FirstOrDefault(u => u.Username == username);
 
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////         USER   CRUD          /////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////
+
+
+
+        public UserGetModel GetById(int id)
+        {
+            User user = context.Users.FirstOrDefault(u => u.Id == id);
+            return UserGetModel.FromUser(user);
+        }
+
+        public UserGetModel Create(UserPostModel userPostModel)
+        {
+            User toAdd = UserPostModel.ToUser(userPostModel);
+
+            context.Users.Add(toAdd);
+            context.SaveChanges();
+            return UserGetModel.FromUser(toAdd);
+        }
+
+        public UserGetModel Upsert(int id, UserPostModel userPostModel)
+        {
+            var existing = context.Users.AsNoTracking().FirstOrDefault(u => u.Id == id);
+            if (existing == null)
+            {
+                User toAdd = UserPostModel.ToUser(userPostModel);
+                context.Users.Add(toAdd);
+                context.SaveChanges();
+                return UserGetModel.FromUser(toAdd);
+            }
+
+            User toUpdate = UserPostModel.ToUser(userPostModel);
+            toUpdate.Id = id;
+            context.Users.Update(toUpdate);
+            context.SaveChanges();
+            return UserGetModel.FromUser(toUpdate);
+        }
+
+        public UserGetModel Delete(int id)
+        {
+            var existing = context.Users.FirstOrDefault(u => u.Id == id);
+            if (existing == null)
+            {
+                return null;
+            }
+            context.Users.Remove(existing);
+            context.SaveChanges();
+
+            return UserGetModel.FromUser(existing);
+        }
+
+
     }
 }

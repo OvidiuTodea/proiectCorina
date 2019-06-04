@@ -80,7 +80,7 @@ namespace WebApplication3.Controllers
         /// <param name="movie"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Authorize(Roles = "Admin,Regular")] 
+        [Authorize(Roles = "Admin,Regular")] //va functiona doar pt aceste roluri
         [HttpPost]
         public void Post([FromBody] Movie movie)
         {

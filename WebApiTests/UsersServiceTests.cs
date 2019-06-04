@@ -112,7 +112,7 @@ namespace Tests
                 Assert.IsNotNull(addResult);
                 Assert.AreEqual(addedUser.Username, addResult.Username);
 
-                var authentificate = new WebApplication3.ViewModels.UserGetModel
+                var authentificate = new WebApplication3.ViewModels.LoginGetModel
                 {
                     Email = "ovi@yahoo.com",
                     Username = "user_ovi"
@@ -152,7 +152,7 @@ namespace Tests
                 Assert.IsNotNull(addResult);
                 Assert.AreEqual(addedUser.Username, addResult.Username);
 
-                var authentificate = new WebApplication3.ViewModels.UserGetModel
+                var authentificate = new WebApplication3.ViewModels.LoginGetModel
                 {
                     Email = "ovi@yahoo.com",
                     Username = "user_ovi"
@@ -204,11 +204,11 @@ namespace Tests
 
                 };
 
-                UserGetModel user1 = userService.Register(addedUser1);
-                UserGetModel user2 = userService.Register(addedUser2);
-                UserGetModel user3 = userService.Register(addedUser3);
+                LoginGetModel user1 = userService.Register(addedUser1);
+                LoginGetModel user2 = userService.Register(addedUser2);
+                LoginGetModel user3 = userService.Register(addedUser3);
 
-                List<UserGetModel> actual = new List<UserGetModel>();
+                List<LoginGetModel> actual = new List<LoginGetModel>();
 
                 user1.Token = null;
                 user2.Token = null;
@@ -218,8 +218,8 @@ namespace Tests
                 actual.Add(user2);
                 actual.Add(user3);
 
-                IEnumerable<UserGetModel> result = userService.GetAll();
-                IEnumerable<UserGetModel> expected = actual.AsEnumerable();
+                IEnumerable<LoginGetModel> result = userService.GetAll();
+                IEnumerable<LoginGetModel> expected = actual.AsEnumerable();
 
                 Assert.IsTrue(expected.SequenceEqual(actual));
 

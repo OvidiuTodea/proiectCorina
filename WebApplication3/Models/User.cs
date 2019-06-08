@@ -23,5 +23,7 @@ namespace WebApplication3.Models
 
         [EnumDataType(typeof(UserRole))]
         public UserRole UserRole { get; set; }
+
+        public DateTime DataRegistered { get; set; }
     }
 }

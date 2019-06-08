@@ -5,13 +5,14 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication3.Models;
 using WebApplication3.Services;
 using WebApplication3.ViewModels;
 
 namespace WebApplication3.Controllers
 {
     // https://jasonwatmore.com/post/2018/08/14/aspnet-core-21-jwt-authentication-tutorial-with-example-api
-    [Authorize]
+    //[Authorize]
     //[Route("api/[controller]/[action]")]
     [Route("api/[controller]")]
     [ApiController]
@@ -38,7 +39,6 @@ namespace WebApplication3.Controllers
 
         [AllowAnonymous]
         [HttpPost("register")]
-        //[HttpPost]
         public IActionResult Register([FromBody]RegisterPostModel registerModel)
         {
             var user = _userService.Register(registerModel);
@@ -49,8 +49,11 @@ namespace WebApplication3.Controllers
             return Ok(user);
         }
 
-        [AllowAnonymous]
+        //[AllowAnonymous]
         [HttpGet]
+        [Authorize(Roles = "UserManager,Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetAll()
         {
             var users = _userService.GetAll();
@@ -102,10 +105,43 @@ namespace WebApplication3.Controllers
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "UserManager,Admin")]
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] UserPostModel userPostModel)
         {
+            User curentUserLoggedIn = _userService.GetCurrentUser(HttpContext);
+
+            if(curentUserLoggedIn.UserRole == UserRole.UserManager)
+            {
+                UserGetModel userToUpdate = _userService.GetById(id);
+
+                var dateOfUserRegistration = curentUserLoggedIn.DataRegistered;
+                var curentDate = DateTime.Now;
+                // var diffMonths = curentDate.Subtract(dateOfUserRegistration).Days / (365.25 / 12); //diferenta de luni
+
+                var diffMonths = curentDate.Month - dateOfUserRegistration.Month;
+
+                if (diffMonths >= 6)
+                {
+                    var result3 = _userService.Upsert(id, userPostModel);
+                    return Ok(result3);
+                }
+
+                UserPostModel newUserPost = new UserPostModel
+                {
+                    FirstName = userPostModel.FirstName,
+                    LastName = userPostModel.LastName,
+                    UserName = userPostModel.UserName,
+                    Email = userPostModel.Email,
+                    Password = userPostModel.Password,
+                    UserRole = userToUpdate.UserRole.ToString()
+                };
+
+                var result2 = _userService.Upsert(id, newUserPost);
+                return Ok(result2);
+
+            }
+
             var result = _userService.Upsert(id, userPostModel);
             return Ok(result);
         }
@@ -121,11 +157,26 @@ namespace WebApplication3.Controllers
         [HttpDelete("{id}")]
 
         public IActionResult Delete(int id)
-        {
+        { 
+
+            User curentUserLoggedIn = _userService.GetCurrentUser(HttpContext);
+
+            
+            if (curentUserLoggedIn.UserRole == UserRole.UserManager)
+            {
+                UserGetModel userToDelete = _userService.GetById(id);
+
+                if (userToDelete.UserRole.Equals(UserRole.Admin))
+                {
+                    return NotFound("You are not authorized to delete an Admin User");
+                }
+                
+            }
+
             var result = _userService.Delete(id);
             if (result == null)
             {
-                return NotFound("The User with the given id does not exist");
+                return NotFound("User with the given id is not found ");
             }
             return Ok(result);
         }

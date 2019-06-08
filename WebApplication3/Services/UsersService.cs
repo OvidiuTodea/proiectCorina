@@ -59,7 +59,8 @@ namespace WebApplication3.Services
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.Username.ToString()),
-                    new Claim(ClaimTypes.Role, user.UserRole.ToString())
+                    new Claim(ClaimTypes.Role, user.UserRole.ToString()),
+                    new Claim(ClaimTypes.UserData, user.DataRegistered.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7), //cand expira tokenul
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -145,7 +146,9 @@ namespace WebApplication3.Services
 
         public UserGetModel GetById(int id)
         {
-            User user = context.Users.FirstOrDefault(u => u.Id == id);
+            User user = context.Users
+                .AsNoTracking()
+                .FirstOrDefault(u => u.Id == id);
             return UserGetModel.FromUser(user);
         }
 

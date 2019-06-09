@@ -25,5 +25,6 @@ namespace WebApplication3.Models
         public UserRole UserRole { get; set; }
 
         public DateTime DataRegistered { get; set; }
+        public IEnumerable<Movie> Movies { get; set; }
     }
 }

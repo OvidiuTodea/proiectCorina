@@ -17,15 +17,16 @@ namespace WebApplication3.Services
 {
     public interface IUsersService
     {
-        LoginGetModel Authenticate(string username, string password);
-        LoginGetModel Register(RegisterPostModel registerInfo);
+        UserGetModel Authenticate(string username, string password);
+        UserGetModel Register(RegisterPostModel registerInfo);
         User GetCurrentUser(HttpContext httpContext);
-        IEnumerable<LoginGetModel> GetAll();
+        IEnumerable<UserGetModel> GetAll();
 
-        UserGetModel GetById(int id);
-        UserGetModel Create(UserPostModel userPostModel);
-        UserGetModel Upsert(int id, UserPostModel userPostModel);
-        UserGetModel Delete(int id);
+        User GetById(int id);
+        User Create(UserPostModel user);
+        User Upsert(int id, UserPostModel userPostModel, User addedBy);
+        User Delete(int id);
+
     }
 
     public class UsersService : IUsersService
@@ -39,7 +40,7 @@ namespace WebApplication3.Services
             this.appSettings = appSettings.Value;
         }
 
-        public LoginGetModel Authenticate(string username, string password)
+        public UserGetModel Authenticate(string username, string password)
         {
             var user = context.Users
                 .SingleOrDefault(x => x.Username == username &&
@@ -52,28 +53,25 @@ namespace WebApplication3.Services
             // authentication successful so generate jwt token
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(appSettings.Secret);
-            //token descriptor contine informatia continuta in token
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.Username.ToString()),
-                    new Claim(ClaimTypes.Role, user.UserRole.ToString()),
-                    new Claim(ClaimTypes.UserData, user.DataRegistered.ToString())
+                    new Claim(ClaimTypes.Role,user.UserRole.ToString())
                 }),
-                Expires = DateTime.UtcNow.AddDays(7), //cand expira tokenul
+                Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            var result = new LoginGetModel
+            var result = new UserGetModel
             {
                 Id = user.Id,
                 Email = user.Email,
-                Username = user.Username,
+                UserName = user.Username,
                 Token = tokenHandler.WriteToken(token)
             };
-            
+
             return result;
         }
 
@@ -96,7 +94,7 @@ namespace WebApplication3.Services
             }
         }
 
-        public LoginGetModel Register(RegisterPostModel registerInfo)
+        public UserGetModel Register(RegisterPostModel registerInfo)
         {
             User existing = context.Users.FirstOrDefault(u => u.Username == registerInfo.Username);
             if (existing != null)
@@ -111,22 +109,11 @@ namespace WebApplication3.Services
                 FirstName = registerInfo.FirstName,
                 Password = ComputeSha256Hash(registerInfo.Password),
                 Username = registerInfo.Username,
-                UserRole = UserRole.Regular
-            });
-            context.SaveChanges();  
-            return Authenticate(registerInfo.Username, registerInfo.Password);
-        }
+                UserRole = UserRole.Regular,
 
-        public IEnumerable<LoginGetModel> GetAll()
-        {
-            // return users without passwords
-            return context.Users.Select(user => new LoginGetModel
-            {
-                Id = user.Id,
-                Email = user.Email,
-                Username = user.Username,
-                Token = null
             });
+            context.SaveChanges();
+            return Authenticate(registerInfo.Username, registerInfo.Password);
         }
 
         public User GetCurrentUser(HttpContext httpContext)
@@ -135,63 +122,86 @@ namespace WebApplication3.Services
             //string accountType = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.AuthenticationMethod).Value;
             //return _context.Users.FirstOrDefault(u => u.Username == username && u.AccountType.ToString() == accountType);
             return context.Users.FirstOrDefault(u => u.Username == username);
-
         }
 
-        ////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////         USER   CRUD          /////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////
-
-
-
-        public UserGetModel GetById(int id)
+        public IEnumerable<UserGetModel> GetAll()
         {
-            User user = context.Users
-                .AsNoTracking()
+            // return users without passwords
+            return context.Users.Select(user => new UserGetModel
+            {
+                Id = user.Id,
+                Email = user.Email,
+                UserName = user.Username,
+                Token = null
+            });
+        }
+
+        public User GetById(int id)
+        {
+            return context.Users
                 .FirstOrDefault(u => u.Id == id);
-            return UserGetModel.FromUser(user);
         }
 
-        public UserGetModel Create(UserPostModel userPostModel)
+        public User Create(UserPostModel user)
         {
-            User toAdd = UserPostModel.ToUser(userPostModel);
+            User toAdd = UserPostModel.ToUser(user);
 
             context.Users.Add(toAdd);
             context.SaveChanges();
-            return UserGetModel.FromUser(toAdd);
+            return toAdd;
+
         }
 
-        public UserGetModel Upsert(int id, UserPostModel userPostModel)
+        public User Upsert(int id, UserPostModel user, User addedBy)
         {
             var existing = context.Users.AsNoTracking().FirstOrDefault(u => u.Id == id);
             if (existing == null)
             {
-                User toAdd = UserPostModel.ToUser(userPostModel);
+                User toAdd = UserPostModel.ToUser(user);
+                user.Password = ComputeSha256Hash(user.Password);
                 context.Users.Add(toAdd);
                 context.SaveChanges();
-                return UserGetModel.FromUser(toAdd);
+                return toAdd;
             }
 
-            User toUpdate = UserPostModel.ToUser(userPostModel);
+            User toUpdate = UserPostModel.ToUser(user);
+            toUpdate.Password = existing.Password;
+            toUpdate.DataRegistered = existing.DataRegistered;
             toUpdate.Id = id;
-            context.Users.Update(toUpdate);
-            context.SaveChanges();
-            return UserGetModel.FromUser(toUpdate);
+
+            if (user.UserRole.Equals("Admin") && !addedBy.UserRole.Equals(UserRole.Admin))
+            {
+                return null;
+            }
+            else if ((existing.UserRole.Equals(UserRole.Regular) && addedBy.UserRole.Equals(UserRole.UserManager)) ||
+                (existing.UserRole.Equals(UserRole.UserManager) && addedBy.UserRole.Equals(UserRole.UserManager) && addedBy.DataRegistered.AddMonths(6) <= DateTime.Now))
+            {
+                context.Users.Update(toUpdate);
+                context.SaveChanges();
+                return toUpdate;
+            }
+            else if (addedBy.UserRole.Equals(UserRole.Admin))
+            {
+                context.Users.Update(toUpdate);
+                context.SaveChanges();
+                return toUpdate;
+            }
+
+
+            return null;
         }
 
-        public UserGetModel Delete(int id)
+        public User Delete(int id)
         {
-            var existing = context.Users.FirstOrDefault(u => u.Id == id);
+            var existing = context.Users.FirstOrDefault(user => user.Id == id);
             if (existing == null)
             {
                 return null;
             }
-            context.Users.Remove(existing);
+            context.Users
+           .Remove(existing);
             context.SaveChanges();
-
-            return UserGetModel.FromUser(existing);
+            return existing;
         }
-
-
     }
 }

@@ -14,6 +14,8 @@ namespace WebApplication3.ViewModels
         public string UserName { get; set; }
         public string Email { get; set; }
         public UserRole UserRole { get; set; }
+        public string Token { get; set; }
+
 
         public static UserGetModel FromUser(User user)
         {
@@ -24,7 +26,8 @@ namespace WebApplication3.ViewModels
                 LastName = user.LastName,
                 UserName = user.Username,
                 Email = user.Email,
-                UserRole = user.UserRole
+                UserRole = user.UserRole,
+                Token = null
             };
         }
     }

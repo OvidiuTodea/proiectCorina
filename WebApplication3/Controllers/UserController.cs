@@ -12,7 +12,6 @@ using WebApplication3.ViewModels;
 namespace WebApplication3.Controllers
 {
     // https://jasonwatmore.com/post/2018/08/14/aspnet-core-21-jwt-authentication-tutorial-with-example-api
-    //[Authorize]
     //[Route("api/[controller]/[action]")]
     [Route("api/[controller]")]
     [ApiController]
@@ -25,7 +24,20 @@ namespace WebApplication3.Controllers
             _userService = userService;
         }
 
-        [AllowAnonymous]  //poate fi accesata si daca nu esti logat
+        /// <summary>
+        /// Login for user 
+        /// </summary>
+        /// <remarks>
+        ///            {
+        ///            "username":"ilie91",
+        ///            "password":"123456"
+        ///            }
+        /// 
+        /// 
+        /// </remarks>
+        /// <param name="login">Enter username and password</param>
+        /// <returns>Return username , email and token</returns>
+        [AllowAnonymous]
         [HttpPost("authenticate")]
         public IActionResult Authenticate([FromBody]LoginPostModel login)
         {
@@ -37,11 +49,26 @@ namespace WebApplication3.Controllers
             return Ok(user);
         }
 
+        /// <summary>
+        /// Register a user in the database
+        /// </summary>
+        /// <remarks>
+        ///     {
+        ///         "firstName":"Carmen",
+        ///         "lastName":"Barbu",
+        ///         "username":"bcarmen",
+        ///         "email":"cb@yahoo.com",
+        ///         "password":"123456789"
+        ///        }
+        /// </remarks>
+        /// <param name="register">Introduce firstname, lastname,username,email and password</param>
+        /// <returns>Inserted user in database</returns>
         [AllowAnonymous]
         [HttpPost("register")]
-        public IActionResult Register([FromBody]RegisterPostModel registerModel)
+        //[HttpPost]
+        public IActionResult Register([FromBody]RegisterPostModel register)
         {
-            var user = _userService.Register(registerModel);
+            var user = _userService.Register(register);
             if (user == null)
             {
                 return BadRequest(new { ErrorMessage = "Username already exists." });
@@ -49,135 +76,172 @@ namespace WebApplication3.Controllers
             return Ok(user);
         }
 
-        //[AllowAnonymous]
+        [AllowAnonymous]
+        //[Authorize(Roles = "UserManager, Admin")]
         [HttpGet]
-        [Authorize(Roles = "UserManager,Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetAll()
         {
             var users = _userService.GetAll();
             return Ok(users);
         }
 
-        //////////////////////////////////////////////////////////////////////////
-        ///////////////////////////////  USER CRUD    ////////////////////////////
-        //////////////////////////////////////////////////////////////////////////
-
         /// <summary>
-        /// /users
-        /// Add a new User:
-        /// {
-        ///         firstName = "Ovidiu",
-        ///         lastName = "Todea",
-        ///         userName = "OvidiuTodea",
-        ///         email = "ovi@yahoo.com",
-        ///         password ="123456",
-        ///         userRole = "regular"
-        /// }
-        /// 
+        /// Find an user by the given id.
         /// </summary>
-        /// <param name="userPostModel"> User which should be added</param>
+        /// <remarks>
+        /// Sample response:
+        ///
+        ///     Get /users
+        ///     {  
+        ///        id: 3,
+        ///        firstName = "Pop",
+        ///        lastName = "Andrei",
+        ///        userName = "user123",
+        ///        email = "Us1@yahoo.com",
+        ///        userRole = "regular"
+        ///     }
+        /// </remarks>
+        /// <param name="id">The id given as parameter</param>
+        /// <returns>The user with the given id</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Authorize(Roles ="UserManager,Admin")]
-        [HttpPost]
-        public void Post([FromBody] UserPostModel userPostModel)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        // GET: api/Users/5
+        [Authorize(Roles = "Admin, UserManager")]
+        [HttpGet("{id}", Name = "GetUser")]
+        public IActionResult Get(int id)
         {
-            _userService.Create(userPostModel);
+            var found = _userService.GetById(id);
+            if (found == null)
+            {
+                return NotFound();
+            }
+            return Ok(found);
         }
 
 
         /// <summary>
-        /// /users/id
-        /// Upsert an User
-        ///{
-        ///         firstName = "Ovidiu",
-        ///         lastName = "Todea",
-        ///         userName = "OvidiuTodea",
-        ///         email = "ovi@yahoo.com",
-        ///         password ="123456",
-        ///         userRole = "regular"
-        /// }
+        /// Add an new User
         /// </summary>
-        /// <param name="id"> user id</param>
-        /// <param name="userPostModel"> user </param>
-        /// <returns></returns>
+        ///   /// <remarks>
+        /// Sample response:
+        ///
+        ///     Post /users
+        ///     {
+        ///        firstName = "Pop",
+        ///        lastName = "Andrei",
+        ///        userName = "user123",
+        ///        email = "Us1@yahoo.com",
+        ///        password = "123456",
+        ///        userRole = "regular"
+        ///     }
+        /// </remarks>
+        /// <param name="userPostDTO">The input user to be added</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin, UserManager")]
+        [HttpPost]
+        public void Post([FromBody] UserPostModel userPostDTO)
+        {
+            _userService.Create(userPostDTO);
+        }
+
+
+
+        /// <summary>
+        /// Modify an user if exists in dbSet , or add if not exist
+        /// </summary>
+        /// <param name="id">id-ul user to update</param>
+        /// <param name="userPostDTO">obiect userPostDTO to update</param>
+        /// Sample request:
+        ///     <remarks>
+        ///     Put /users/id
+        ///     {
+        ///        firstName = "Pop",
+        ///        lastName = "Andrei",
+        ///        userName = "user123",
+        ///        email = "Us1@yahoo.com",
+        ///        userRole = "regular"
+        ///     }
+        /// </remarks>
+        /// <returns>Status 200 daca a fost modificat</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [Authorize(Roles = "UserManager,Admin")]
+        [Authorize(Roles = "Admin,UserManager")]
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] UserPostModel userPostModel)
+        public IActionResult Put(int id, [FromBody] UserPostModel userPostDTO)
         {
-            User curentUserLoggedIn = _userService.GetCurrentUser(HttpContext);
-
-            if(curentUserLoggedIn.UserRole == UserRole.UserManager)
+            User addedBy = _userService.GetCurrentUser(HttpContext);
+            var result = _userService.Upsert(id, userPostDTO, addedBy);
+            if (result == null)
             {
-                UserGetModel userToUpdate = _userService.GetById(id);
-
-                var dateOfUserRegistration = curentUserLoggedIn.DataRegistered;
-                var curentDate = DateTime.Now;
-                // var diffMonths = curentDate.Subtract(dateOfUserRegistration).Days / (365.25 / 12); //diferenta de luni
-
-                var diffMonths = curentDate.Month - dateOfUserRegistration.Month;
-
-                if (diffMonths >= 6)
-                {
-                    var result3 = _userService.Upsert(id, userPostModel);
-                    return Ok(result3);
-                }
-
-                UserPostModel newUserPost = new UserPostModel
-                {
-                    FirstName = userPostModel.FirstName,
-                    LastName = userPostModel.LastName,
-                    UserName = userPostModel.UserName,
-                    Email = userPostModel.Email,
-                    Password = userPostModel.Password,
-                    UserRole = userToUpdate.UserRole.ToString()
-                };
-
-                var result2 = _userService.Upsert(id, newUserPost);
-                return Ok(result2);
-
+                return Forbid("You don't have rigts to perform this action!");
             }
-
-            var result = _userService.Upsert(id, userPostModel);
             return Ok(result);
         }
 
+
+
         /// <summary>
-        /// Delete the User with the given id
+        /// Delete an user
         /// </summary>
-        /// <param name="id">the given id</param>
+        /// <param name="id">User id to delete</param>
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Authorize(Roles = "UserManager,Admin")]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [Authorize(Roles = "Admin, UserManager")]
         [HttpDelete("{id}")]
-
         public IActionResult Delete(int id)
-        { 
+        {
+            //User addedBy = _userService.GetCurrentUser(HttpContext);
+            //var result = _userService.Delete(id, addedBy);
+            //if (result == null)
+            //{
+            //    return Forbid("You don't have rigts to perform this action!");
+            //}
+            //return Ok(result);
 
-            User curentUserLoggedIn = _userService.GetCurrentUser(HttpContext);
+            User currentLogedUser = _userService.GetCurrentUser(HttpContext);
+            var regDate = currentLogedUser.DataRegistered;
+            var currentDate = DateTime.Now;
+            var minDate = currentDate.Subtract(regDate).Days / (365 / 12);
 
-            
-            if (curentUserLoggedIn.UserRole == UserRole.UserManager)
+            if (currentLogedUser.UserRole == UserRole.UserManager)
             {
-                UserGetModel userToDelete = _userService.GetById(id);
-
-                if (userToDelete.UserRole.Equals(UserRole.Admin))
+                User getUser = _userService.GetById(id);
+                if (getUser.UserRole == UserRole.Admin)
                 {
-                    return NotFound("You are not authorized to delete an Admin User");
+                    return Forbid();
                 }
-                
+
+            }
+
+            if (currentLogedUser.UserRole == UserRole.UserManager)
+            {
+                User getUser = _userService.GetById(id);
+                if (getUser.UserRole == UserRole.UserManager && minDate <= 6)
+
+                    return Forbid();
+            }
+            if (currentLogedUser.UserRole == UserRole.UserManager)
+            {
+                User getUser = _userService.GetById(id);
+                if (getUser.UserRole == UserRole.UserManager && minDate >= 6)
+                {
+                    var result1 = _userService.Delete(id);
+                    return Ok(result1);
+                }
+
+
             }
 
             var result = _userService.Delete(id);
             if (result == null)
             {
-                return NotFound("User with the given id is not found ");
+                return NotFound();
             }
+
+
             return Ok(result);
         }
 

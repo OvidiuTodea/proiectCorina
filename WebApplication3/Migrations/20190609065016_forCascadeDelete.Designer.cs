@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebApplication3.Models;
 
 namespace WebApplication3.Migrations
 {
     [DbContext(typeof(MoviesDbContext))]
-    partial class MoviesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190609065016_forCascadeDelete")]
+    partial class forCascadeDelete
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,8 +110,7 @@ namespace WebApplication3.Migrations
                 {
                     b.HasOne("WebApplication3.Models.Movie", "Movie")
                         .WithMany("Comments")
-                        .HasForeignKey("MovieId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("MovieId");
 
                     b.HasOne("WebApplication3.Models.User", "Owner")
                         .WithMany()
@@ -120,8 +121,7 @@ namespace WebApplication3.Migrations
                 {
                     b.HasOne("WebApplication3.Models.User", "Owner")
                         .WithMany("Movies")
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("OwnerId");
                 });
 #pragma warning restore 612, 618
         }

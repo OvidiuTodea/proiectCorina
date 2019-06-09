@@ -96,7 +96,7 @@ namespace WebApplication3.Controllers
         // PUT: api/Movies/5
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Authorize]
+        [Authorize(Roles = "Admin,Regular")]
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] Movie movie)
         {
@@ -111,7 +111,7 @@ namespace WebApplication3.Controllers
         // DELETE: api/ApiWithActions/5
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Authorize]
+        [Authorize(Roles = "Admin,Regular")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

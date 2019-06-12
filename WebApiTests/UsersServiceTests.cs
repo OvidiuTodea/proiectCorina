@@ -45,7 +45,7 @@ namespace Tests
                 var result = usersService.Register(added);
 
                 Assert.IsNotNull(result);
-                Assert.AreEqual(added.Username, result.Username);
+                Assert.AreEqual(added.Username, result.UserName);
             }
         }
 
@@ -110,7 +110,7 @@ namespace Tests
                 var addResult = userService.Register(addedUser);
 
                 Assert.IsNotNull(addResult);
-                Assert.AreEqual(addedUser.Username, addResult.Username);
+                Assert.AreEqual(addedUser.Username, addResult.UserName);
 
                 var authentificate = new WebApplication3.ViewModels.LoginGetModel
                 {
@@ -122,7 +122,7 @@ namespace Tests
 
                 Assert.IsNotNull(result);
 
-                Assert.AreEqual(authentificate.Username, result.Username);
+                Assert.AreEqual(authentificate.Username, result.UserName);
             }
 
         }
@@ -150,7 +150,7 @@ namespace Tests
                 var addResult = userService.Register(addedUser);
 
                 Assert.IsNotNull(addResult);
-                Assert.AreEqual(addedUser.Username, addResult.Username);
+                Assert.AreEqual(addedUser.Username, addResult.UserName);
 
                 var authentificate = new WebApplication3.ViewModels.LoginGetModel
                 {
@@ -204,11 +204,12 @@ namespace Tests
 
                 };
 
-                LoginGetModel user1 = userService.Register(addedUser1);
-                LoginGetModel user2 = userService.Register(addedUser2);
-                LoginGetModel user3 = userService.Register(addedUser3);
+                UserGetModel user1 = userService.Register(addedUser1);
+                UserGetModel user2 = userService.Register(addedUser2);
+                UserGetModel user3 = userService.Register(addedUser3);
+               
 
-                List<LoginGetModel> actual = new List<LoginGetModel>();
+                List<UserGetModel> actual = new List<UserGetModel>();
 
                 user1.Token = null;
                 user2.Token = null;
@@ -218,8 +219,8 @@ namespace Tests
                 actual.Add(user2);
                 actual.Add(user3);
 
-                IEnumerable<LoginGetModel> result = userService.GetAll();
-                IEnumerable<LoginGetModel> expected = actual.AsEnumerable();
+                IEnumerable<UserGetModel> result = userService.GetAll();
+                IEnumerable<UserGetModel> expected = actual.AsEnumerable();
 
                 Assert.IsTrue(expected.SequenceEqual(actual));
 

@@ -61,7 +61,7 @@ namespace WebApplication3.Services
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.Username.ToString()),
-                    new Claim(ClaimTypes.Role,user.UserRole.ToString())
+                   // new Claim(ClaimTypes.Role,user.UserRole.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -111,27 +111,53 @@ namespace WebApplication3.Services
                 return errors;
             }
 
-            context.Users.Add(new User
+            User toAdd = new User
             {
                 Email = registerInfo.Email,
                 LastName = registerInfo.LastName,
                 FirstName = registerInfo.FirstName,
                 Password = ComputeSha256Hash(registerInfo.Password),
                 Username = registerInfo.Username,
-                UserRole = UserRole.Regular,
+                UserUserRoles = new List<UserUserRole>()
+            };
 
+            var regularRole = context
+                .UserRoles
+                .FirstOrDefault(ur => ur.Name == UserRoles.Regular);
+
+            context.Users.Add(toAdd);  // adaugam prima data userul in tabela de lagatura si dupa ii vom adauga acestui user si rolul
+            context.UserUserRoles.Add(new UserUserRole
+            {
+                User = toAdd,
+                UserRole = regularRole,
+                StartTime = DateTime.Now,
+                EndTime = null
             });
+                
+                //UserRole = UserRole.Regular,
+
             context.SaveChanges();
             //return Authenticate(registerInfo.Username, registerInfo.Password);
             return null;
         }
+
+        public UserRole GetCurrentUserRole(User user)
+        {
+            return user
+                .UserUserRoles
+                .FirstOrDefault(userUserRole => userUserRole.EndTime == null)
+                .UserRole;
+        }
+
 
         public User GetCurrentUser(HttpContext httpContext)
         {
             string username = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
             //string accountType = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.AuthenticationMethod).Value;
             //return _context.Users.FirstOrDefault(u => u.Username == username && u.AccountType.ToString() == accountType);
-            return context.Users.FirstOrDefault(u => u.Username == username);
+            return context.Users
+                .Include(u => u.UserUserRoles)
+                .FirstOrDefault(u => u.Username == username);
         }
 
         public IEnumerable<UserGetModel> GetAll()
@@ -164,38 +190,38 @@ namespace WebApplication3.Services
 
         public User Upsert(int id, UserPostModel user, User addedBy)
         {
-            var existing = context.Users.AsNoTracking().FirstOrDefault(u => u.Id == id);
-            if (existing == null)
-            {
-                User toAdd = UserPostModel.ToUser(user);
-                user.Password = ComputeSha256Hash(user.Password);
-                context.Users.Add(toAdd);
-                context.SaveChanges();
-                return toAdd;
-            }
+            //var existing = context.Users.AsNoTracking().FirstOrDefault(u => u.Id == id);
+            //if (existing == null)
+            //{
+            //    User toAdd = UserPostModel.ToUser(user);
+            //    user.Password = ComputeSha256Hash(user.Password);
+            //    context.Users.Add(toAdd);
+            //    context.SaveChanges();
+            //    return toAdd;
+            //}
 
-            User toUpdate = UserPostModel.ToUser(user);
-            toUpdate.Password = existing.Password;
-            toUpdate.DataRegistered = existing.DataRegistered;
-            toUpdate.Id = id;
+            //User toUpdate = UserPostModel.ToUser(user);
+            //toUpdate.Password = existing.Password;
+            //toUpdate.DataRegistered = existing.DataRegistered;
+            //toUpdate.Id = id;
 
-            if (user.UserRole.Equals("Admin") && !addedBy.UserRole.Equals(UserRole.Admin))
-            {
-                return null;
-            }
-            else if ((existing.UserRole.Equals(UserRole.Regular) && addedBy.UserRole.Equals(UserRole.UserManager)) ||
-                (existing.UserRole.Equals(UserRole.UserManager) && addedBy.UserRole.Equals(UserRole.UserManager) && addedBy.DataRegistered.AddMonths(6) <= DateTime.Now))
-            {
-                context.Users.Update(toUpdate);
-                context.SaveChanges();
-                return toUpdate;
-            }
-            else if (addedBy.UserRole.Equals(UserRole.Admin))
-            {
-                context.Users.Update(toUpdate);
-                context.SaveChanges();
-                return toUpdate;
-            }
+            //if (user.UserRole.Equals("Admin") && !addedBy.UserRole.Equals(UserRole.Admin))
+            //{
+            //    return null;
+            //}
+            //else if ((existing.UserRole.Equals(UserRole.Regular) && addedBy.UserRole.Equals(UserRole.UserManager)) ||
+            //    (existing.UserRole.Equals(UserRole.UserManager) && addedBy.UserRole.Equals(UserRole.UserManager) && addedBy.DataRegistered.AddMonths(6) <= DateTime.Now))
+            //{
+            //    context.Users.Update(toUpdate);
+            //    context.SaveChanges();
+            //    return toUpdate;
+            //}
+            //else if (addedBy.UserRole.Equals(UserRole.Admin))
+            //{
+            //    context.Users.Update(toUpdate);
+            //    context.SaveChanges();
+            //    return toUpdate;
+            //}
 
 
             return null;

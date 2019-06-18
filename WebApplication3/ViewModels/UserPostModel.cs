@@ -17,16 +17,16 @@ namespace WebApplication3.ViewModels
 
         public static User ToUser(UserPostModel userPostModel)
         {
-            UserRole rol = WebApplication3.Models.UserRole.Regular;
+            //UserRole rol = WebApplication3.Models.UserRole.Regular;
 
-            if (userPostModel.UserRole == "UserManager")
-            {
-                rol = WebApplication3.Models.UserRole.UserManager;
-            }
-            else if (userPostModel.UserRole == "Admin")
-            {
-                rol = WebApplication3.Models.UserRole.Admin;
-            }
+            //if (userPostModel.UserRole == "UserManager")
+            //{
+            //    rol = WebApplication3.Models.UserRole.UserManager;
+            //}
+            //else if (userPostModel.UserRole == "Admin")
+            //{
+            //    rol = WebApplication3.Models.UserRole.Admin;
+            //}
 
             return new User
             {
@@ -35,7 +35,8 @@ namespace WebApplication3.ViewModels
                 Username = userPostModel.UserName,
                 Email = userPostModel.Email,
                 Password = userPostModel.Password,
-                UserRole = rol
+                
+               // UserRole = rol
             };
         }
     }

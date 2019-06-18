@@ -208,39 +208,41 @@ namespace WebApplication3.Controllers
             //}
             //return Ok(result);
 
+            ///////////////////////////////////////////////////////////////
+
             User currentLogedUser = _userService.GetCurrentUser(HttpContext);
-            var regDate = currentLogedUser.DataRegistered;
-            var currentDate = DateTime.Now;
-            var minDate = currentDate.Subtract(regDate).Days / (365 / 12);
+            //var regDate = currentLogedUser.DataRegistered;
+            //var currentDate = DateTime.Now;
+            //var minDate = currentDate.Subtract(regDate).Days / (365 / 12);
 
-            if (currentLogedUser.UserRole == UserRole.UserManager)
-            {
-                User getUser = _userService.GetById(id);
-                if (getUser.UserRole == UserRole.Admin)
-                {
-                    return Forbid();
-                }
+            //if (currentLogedUser.UserRole == UserRole.UserManager)
+            //{
+            //    User getUser = _userService.GetById(id);
+            //    if (getUser.UserRole == UserRole.Admin)
+            //    {
+            //        return Forbid();
+            //    }
 
-            }
+            //}
 
-            if (currentLogedUser.UserRole == UserRole.UserManager)
-            {
-                User getUser = _userService.GetById(id);
-                if (getUser.UserRole == UserRole.UserManager && minDate <= 6)
+            //if (currentLogedUser.UserRole == UserRole.UserManager)
+            //{
+            //    User getUser = _userService.GetById(id);
+            //    if (getUser.UserRole == UserRole.UserManager && minDate <= 6)
 
-                    return Forbid();
-            }
-            if (currentLogedUser.UserRole == UserRole.UserManager)
-            {
-                User getUser = _userService.GetById(id);
-                if (getUser.UserRole == UserRole.UserManager && minDate >= 6)
-                {
-                    var result1 = _userService.Delete(id);
-                    return Ok(result1);
-                }
+            //        return Forbid();
+            //}
+            //if (currentLogedUser.UserRole == UserRole.UserManager)
+            //{
+            //    User getUser = _userService.GetById(id);
+            //    if (getUser.UserRole == UserRole.UserManager && minDate >= 6)
+            //    {
+            //        var result1 = _userService.Delete(id);
+            //        return Ok(result1);
+            //    }
 
 
-            }
+            //}
 
             var result = _userService.Delete(id);
             if (result == null)

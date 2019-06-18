@@ -26,7 +26,7 @@ namespace WebApplication3.ViewModels
                 LastName = user.LastName,
                 UserName = user.Username,
                 Email = user.Email,
-                UserRole = user.UserRole,
+                //UserRole = user.UserRole,
                 Token = null
             };
         }

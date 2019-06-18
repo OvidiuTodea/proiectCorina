@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using WebApplication3.Models;
+using WebApplication3.Validators;
 using WebApplication3.ViewModels;
 
 namespace WebApplication3.Services
@@ -18,7 +19,7 @@ namespace WebApplication3.Services
     public interface IUsersService
     {
         UserGetModel Authenticate(string username, string password);
-        UserGetModel Register(RegisterPostModel registerInfo);
+        ErrorsCollection Register(RegisterPostModel registerInfo);
         User GetCurrentUser(HttpContext httpContext);
         IEnumerable<UserGetModel> GetAll();
 
@@ -33,11 +34,13 @@ namespace WebApplication3.Services
     {
         private MoviesDbContext context;
         private readonly AppSettings appSettings;
+        private IRegisterValidator registerValidator; 
 
-        public UsersService(MoviesDbContext context, IOptions<AppSettings> appSettings)
+        public UsersService(MoviesDbContext context,IRegisterValidator registerValidator, IOptions<AppSettings> appSettings)
         {
             this.context = context;
             this.appSettings = appSettings.Value;
+            this.registerValidator = registerValidator;
         }
 
         public UserGetModel Authenticate(string username, string password)
@@ -94,12 +97,18 @@ namespace WebApplication3.Services
             }
         }
 
-        public UserGetModel Register(RegisterPostModel registerInfo)
+        public ErrorsCollection Register(RegisterPostModel registerInfo)
         {
-            User existing = context.Users.FirstOrDefault(u => u.Username == registerInfo.Username);
-            if (existing != null)
+            //User existing = context.Users.FirstOrDefault(u => u.Username == registerInfo.Username);
+            //if (existing != null)
+            //{
+            //    return null;
+            //}
+
+            var errors = registerValidator.Validate(registerInfo, context);
+            if (errors != null)
             {
-                return null;
+                return errors;
             }
 
             context.Users.Add(new User
@@ -113,7 +122,8 @@ namespace WebApplication3.Services
 
             });
             context.SaveChanges();
-            return Authenticate(registerInfo.Username, registerInfo.Password);
+            //return Authenticate(registerInfo.Username, registerInfo.Password);
+            return null;
         }
 
         public User GetCurrentUser(HttpContext httpContext)

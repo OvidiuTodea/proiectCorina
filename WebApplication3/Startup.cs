@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Text;
 using WebApplication3.Models;
 using WebApplication3.Services;
+using WebApplication3.Validators;
 
 namespace WebApplication3
 {
@@ -94,6 +95,7 @@ namespace WebApplication3
             services.AddScoped<IMovieService, MovieService>();
             services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<IUsersService, UsersService>();
+            services.AddScoped<IRegisterValidator, RegisterValidator>();
 
         }
 

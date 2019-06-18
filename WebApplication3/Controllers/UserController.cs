@@ -68,12 +68,19 @@ namespace WebApplication3.Controllers
         //[HttpPost]
         public IActionResult Register([FromBody]RegisterPostModel register)
         {
-            var user = _userService.Register(register);
-            if (user == null)
+            //var user = _userService.Register(register);
+            //if (user == null)
+            //{
+            //    return BadRequest(new { ErrorMessage = "Username already exists." });
+            //}
+            //return Ok(user);
+
+            var errors = _userService.Register(register);
+            if (errors != null)
             {
-                return BadRequest(new { ErrorMessage = "Username already exists." });
+                return BadRequest(errors);
             }
-            return Ok(user);
+            return Ok();
         }
 
         [AllowAnonymous]

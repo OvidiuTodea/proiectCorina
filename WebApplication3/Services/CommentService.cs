@@ -9,6 +9,10 @@ namespace WebApplication3.Services
     public interface ICommentService
     {
         IEnumerable<CommentGetModel> GetAll(string filter);
+        Comment Create(CommentPostModel comment, User addedBy);
+        Comment Upsert(int id, Comment comment);
+        Comment Delete(int id);
+        Comment GetById(int id);
     }
     public class CommentService : ICommentService
     {
@@ -16,6 +20,27 @@ namespace WebApplication3.Services
         public CommentService(MoviesDbContext context)
         {
             this.context = context;
+        }
+
+        public Comment Create(CommentPostModel comment, User addedBy)
+        {
+            Comment createdComment = CommentPostModel.ToComment(comment);
+            createdComment.Owner = addedBy;
+            context.Comments.Add(createdComment);
+            context.SaveChanges();
+            return createdComment;
+        }
+
+        public Comment Delete(int id)
+        {
+            var existing = context.Comments.FirstOrDefault(comment => comment.Id == id);
+            if (existing == null)
+            {
+                return null;
+            }
+            context.Comments.Remove(existing);
+            context.SaveChanges();
+            return existing;
         }
 
         public IEnumerable<CommentGetModel> GetAll(string filter)
@@ -59,6 +84,28 @@ namespace WebApplication3.Services
                 return resultCommentsNoFilter;
             }
             return resultComments;
+        }
+
+        public Comment GetById(int id)
+        {
+            return context.Comments.FirstOrDefault(c => c.Id == id);
+        }
+
+        public Comment Upsert(int id, Comment comment)
+        {
+            var existing = context.Comments.AsNoTracking().FirstOrDefault(c => c.Id == id);
+            if (existing == null)
+            {
+                context.Comments.Add(comment);
+                context.SaveChanges();
+                return comment;
+
+            }
+
+            comment.Id = id;
+            context.Comments.Update(comment);
+            context.SaveChanges();
+            return comment;
         }
     }
 }

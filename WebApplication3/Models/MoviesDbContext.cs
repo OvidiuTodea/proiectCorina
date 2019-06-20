@@ -19,10 +19,10 @@ namespace WebApplication3.Models
                .WithMany(c => c.Comments)
                .OnDelete(DeleteBehavior.Cascade);
 
-            //builder.Entity<Movie>()
-            //  .HasOne(t => t.Owner)
-            //  .WithMany(c => c.Movies)
-            //  .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<Movie>()
+              .HasOne(t => t.Owner)
+              .WithMany(c => c.Movies)
+              .OnDelete(DeleteBehavior.Cascade);
 
         }
 

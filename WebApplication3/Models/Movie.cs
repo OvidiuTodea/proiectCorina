@@ -12,21 +12,36 @@ namespace WebApplication3.Models
         Horror,
         Thriller
     }
+
+    public enum WatchedState
+    {
+        Yes,
+        InProgress,
+        No
+    }
+
     public class Movie
     {
         public int Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
         public int Duration { get; set; }
+
         [EnumDataType(typeof(Genre))]
         public Genre Genre { get; set; }
+
+        [EnumDataType(typeof(WatchedState))]
+        public WatchedState WatchedState { get; set; }
+
         public int ReleaseYear { get; set; }
         public DateTime DateAdded { get; set; }
         public string Director { get; set; }
         [Range(1, 10, ErrorMessage = "Can only be between 1 and 10")]
         public int Rating { get; set; }
         public bool Watched { get; set; }
+
         public List<Comment> Comments { get; set; }
         public User Owner { get; set; }
+        public DateTime? DateClosed { get; set; }
     }
 }

@@ -6,12 +6,7 @@ using System.Threading.Tasks;
 
 namespace WebApplication3.Models
 {
-    //public enum UserRole
-    //{
-    //    Regular,
-    //    UserManager,
-    //    Admin,
-    //}
+   
     public class User
     {
         public int Id { get; set; }
@@ -21,12 +16,11 @@ namespace WebApplication3.Models
         public string Email { get; set; }
         public string Password { get; set; }
 
-       //[EnumDataType(typeof(UserRole))]
-       // public UserRole UserRole { get; set; }
-
+       
+        public DateTime RegistrationDate { get; set; }
+        public IEnumerable<Movie> Movies { get; set; }
         public IEnumerable<UserUserRole> UserUserRoles { get; set; }
 
-        //public DateTime DataRegistered { get; set; }
-        //public IEnumerable<Movie> Movies { get; set; }
+       
     }
 }

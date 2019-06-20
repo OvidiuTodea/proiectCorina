@@ -15,6 +15,7 @@ namespace WebApplication3.Controllers
     {
         private IMovieService movieService;
         private IUsersService usersService;
+
         public MoviesController(IMovieService movieService,IUsersService usersService)
         {
             this.movieService = movieService;
@@ -43,6 +44,7 @@ namespace WebApplication3.Controllers
         /// <returns>The movie associated with the id param</returns>
         // GET: api/Movies/5
         [HttpGet("{id}", Name = "Get")]
+        [Authorize(Roles = "Admin,Regular")]
         public IActionResult Get(int id)
         {
             var found = movieService.GetById(id);
@@ -82,7 +84,7 @@ namespace WebApplication3.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "Admin,Regular")] //va functiona doar pt aceste roluri
         [HttpPost]
-        public void Post([FromBody] Movie movie)
+        public void Post([FromBody] MoviePostModel movie)
         {
             User addedBy = usersService.GetCurrentUser(HttpContext);
             movieService.Create(movie, addedBy);

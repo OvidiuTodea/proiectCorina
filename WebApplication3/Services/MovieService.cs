@@ -17,7 +17,7 @@ namespace WebApplication3.Services
         /// <returns></returns>
         PaginatedList<MovieGetModel> GetAll(int page, DateTime? from = null, DateTime? to = null);
         Movie GetById(int id);
-        Movie Create(Movie movie, User addedBy);
+        Movie Create(MoviePostModel movie, User addedBy);
         Movie Upsert(int id, Movie movie);
         Movie Delete(int id);
     }
@@ -29,13 +29,15 @@ namespace WebApplication3.Services
             this.context = context;
         }
 
-        public Movie Create(Movie movie, User addedBy)
+        public Movie Create(MoviePostModel movie, User addedBy)
         {
-           // Movie toAdd = MoviePostModel.ToMovie(movie);
-            context.Movies.Add(movie);
-            movie.Owner = addedBy;
+            Movie toAdd = MoviePostModel.ToMovie(movie);
+            movie.DateClosed = null;
+            movie.DateAdded = DateTime.Now;
+            toAdd.Owner = addedBy;
+            context.Movies.Add(toAdd);
             context.SaveChanges();
-            return movie;
+            return toAdd;
         }
 
         public Movie Delete(int id)
@@ -48,14 +50,13 @@ namespace WebApplication3.Services
             }
 
             // o varianta de a sterge si comentariile odata cu filmul
-            foreach (var Comment in existing.Comments)
-            {
-                context.Comments.Remove(Comment);
-            }
+            //foreach (var Comment in existing.Comments)
+            //{
+            //    context.Comments.Remove(Comment);
+            //}
 
             context.Movies.Remove(existing);
             context.SaveChanges();
-
             return existing;
         }
 
@@ -90,8 +91,8 @@ namespace WebApplication3.Services
         {
             // sau context.Movies.Find()
             return context.Movies
-                .Include(f => f.Comments)
-                .FirstOrDefault(f => f.Id == id);
+                .Include(c => c.Comments)
+                .FirstOrDefault(m => m.Id == id);
         }
 
         public Movie Upsert(int id, Movie movie)
@@ -99,11 +100,18 @@ namespace WebApplication3.Services
             var existing = context.Movies.AsNoTracking().FirstOrDefault(f => f.Id == id);
             if (existing == null)
             {
+                movie.DateClosed = null;
+                movie.DateAdded = DateTime.Now;
                 context.Movies.Add(movie);
                 context.SaveChanges();
                 return movie;
             }
             movie.Id = id;
+            if (movie.WatchedState == WatchedState.Yes && existing.WatchedState != WatchedState.Yes)
+                movie.DateClosed = DateTime.Now;
+            else if (existing.WatchedState == WatchedState.Yes && movie.WatchedState != WatchedState.Yes)
+                movie.DateClosed = null;
+
             context.Movies.Update(movie);
             context.SaveChanges();
             return movie;

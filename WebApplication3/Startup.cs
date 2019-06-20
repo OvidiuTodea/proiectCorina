@@ -96,6 +96,11 @@ namespace WebApplication3
             services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<IUsersService, UsersService>();
             services.AddScoped<IRegisterValidator, RegisterValidator>();
+            services.AddScoped<ICreateValidator, CreateValidator>();
+            services.AddScoped<IUserRoleService, UserRoleService>();
+            services.AddScoped<IUserUserRolesService, UserUserRolesService>();
+            services.AddScoped<IUserRoleValidator, UserRoleValidator>();
+
 
         }
 

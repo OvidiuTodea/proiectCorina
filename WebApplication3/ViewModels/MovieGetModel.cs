@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using WebApplication3.Models;
 
 namespace WebApplication3.ViewModels
@@ -12,6 +14,13 @@ namespace WebApplication3.ViewModels
         public DateTime DateAdded { get; set; }
         public int ReleaseYear { get; set; }
         public int NumberOfComments { get; set; }
+        [EnumDataType(typeof(Genre))]
+        public Genre Genre { get; set; }
+        [EnumDataType(typeof(WatchedState))]
+        public WatchedState WatchedState { get; set; }
+        public DateTime? DateClosed { get; set; }
+
+
 
         public static MovieGetModel FromMovie(Movie movie)
         {
@@ -22,7 +31,10 @@ namespace WebApplication3.ViewModels
                 Rating = movie.Rating,
                 DateAdded=movie.DateAdded,
                 ReleaseYear=movie.ReleaseYear,
-                NumberOfComments = movie.Comments.Count
+                NumberOfComments = movie.Comments.Count,
+                Genre = movie.Genre,
+                WatchedState = movie.WatchedState,
+                DateClosed = movie.DateClosed
             };
         }
     }

@@ -17,7 +17,6 @@ namespace WebApplication3.Validators
         public ErrorsCollection Validate(RegisterPostModel registerPostModel, MoviesDbContext context)
         {
             ErrorsCollection errorsCollection = new ErrorsCollection { Entity = nameof(RegisterPostModel) };
-
             User existing = context.Users.FirstOrDefault(u => u.Username == registerPostModel.Username);
                 if (existing != null)
             {
@@ -29,20 +28,20 @@ namespace WebApplication3.Validators
                 errorsCollection.ErrorMessages.Add("The password cannot be shorter than 6 characters");
             }
 
-            int nrOfDigits = 0;
+            //int nrOfDigits = 0;
 
-            foreach (char c in registerPostModel.Password)
-            {
-                if (c >= '0' && c <= '9')
-                {
-                    nrOfDigits++;
-                }
-            }
+            //foreach (char c in registerPostModel.Password)
+            //{
+            //    if (c >= '0' && c <= '9')
+            //    {
+            //        nrOfDigits++;
+            //    }
+            //}
 
-                if (nrOfDigits < 2)
-            {
-                errorsCollection.ErrorMessages.Add("The password must contain at least 2 digits");
-            }
+            //    if (nrOfDigits < 2)
+            //{
+            //    errorsCollection.ErrorMessages.Add("The password must contain at least 2 digits");
+            //}
                 if (errorsCollection.ErrorMessages.Count > 0)
             {
                 return errorsCollection;

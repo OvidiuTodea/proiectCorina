@@ -29,9 +29,9 @@ namespace WebApplication3.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpGet]
-        public IEnumerable<CommentGetModel> GetAll([FromQuery]string filter)
+        public PaginatedList<CommentGetModel> GetAll([FromQuery]string filter, [FromQuery]int page = 1)
         {
-            return commentService.GetAll(filter);
+            return commentService.GetAll(filter, page);
         }
 
         [HttpGet("{id}")]

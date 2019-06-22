@@ -8,7 +8,7 @@ namespace WebApplication3.Services
 {
     public interface ICommentService
     {
-        IEnumerable<CommentGetModel> GetAll(string filter);
+        PaginatedList<CommentGetModel> GetAll(string filter, int page);
         Comment Create(CommentPostModel comment, User addedBy);
         Comment Upsert(int id, Comment comment);
         Comment Delete(int id);
@@ -43,48 +43,48 @@ namespace WebApplication3.Services
             return existing;
         }
 
-        public IEnumerable<CommentGetModel> GetAll(string filter)
-        {
+        //public IEnumerable<CommentGetModel> GetAll(string filter, int page)
+        //{
 
-            IQueryable<Movie> result = context.Movies.Include(c => c.Comments);
+        //    IQueryable<Movie> result = context.Movies.Include(c => c.Comments);
 
-            List<CommentGetModel> resultComments = new List<CommentGetModel>();
-            List<CommentGetModel> resultCommentsNoFilter = new List<CommentGetModel>();
+        //    List<CommentGetModel> resultComments = new List<CommentGetModel>();
+        //    List<CommentGetModel> resultCommentsNoFilter = new List<CommentGetModel>();
 
-            foreach (Movie m in result)
-            {
-                m.Comments.ForEach(c =>
-                {
-                    if (c.Text == null || filter == null)
-                    {
-                        CommentGetModel comment = new CommentGetModel
-                        {
-                            Important = c.Important,
-                            Text = c.Text,
-                            MovieId = m.Id
+        //    foreach (Movie m in result)
+        //    {
+        //        m.Comments.ForEach(c =>
+        //        {
+        //            if (c.Text == null || filter == null)
+        //            {
+        //                CommentGetModel comment = new CommentGetModel
+        //                {
+        //                    Important = c.Important,
+        //                    Text = c.Text,
+        //                    MovieId = m.Id
 
-                        };
-                        resultCommentsNoFilter.Add(comment);
-                    }
-                    else if (c.Text.Contains(filter))
-                    {
-                        CommentGetModel comment = new CommentGetModel
-                        {
-                            Important = c.Important,
-                            Text = c.Text,
-                            MovieId = m.Id
+        //                };
+        //                resultCommentsNoFilter.Add(comment);
+        //            }
+        //            else if (c.Text.Contains(filter))
+        //            {
+        //                CommentGetModel comment = new CommentGetModel
+        //                {
+        //                    Important = c.Important,
+        //                    Text = c.Text,
+        //                    MovieId = m.Id
 
-                        };
-                        resultComments.Add(comment);
-                    }
-                });
-            }
-            if (filter == null)
-            {
-                return resultCommentsNoFilter;
-            }
-            return resultComments;
-        }
+        //                };
+        //                resultComments.Add(comment);
+        //            }
+        //        });
+        //    }
+        //    if (filter == null)
+        //    {
+        //        return resultCommentsNoFilter;
+        //    }
+        //    return resultComments;
+        //}
 
         public Comment GetById(int id)
         {
@@ -106,6 +106,26 @@ namespace WebApplication3.Services
             context.Comments.Update(comment);
             context.SaveChanges();
             return comment;
+        }
+
+        public PaginatedList<CommentGetModel> GetAll(string filter, int page)
+        {
+            IQueryable<Comment> result = context
+                .Comments
+                .Where(c => string.IsNullOrEmpty(filter) || c.Text.Contains(filter))
+                .OrderBy(c => c.Id)
+                .Include(c => c.Movie);
+
+            PaginatedList<CommentGetModel> paginatedResult = new PaginatedList<CommentGetModel>();
+            paginatedResult.CurrentPage = page;
+
+            paginatedResult.NumberOfPages = (result.Count() - 1) / PaginatedList<CommentGetModel>.EntriesPerPage + 1;
+            result = result
+                .Skip((page - 1) * PaginatedList<CommentGetModel>.EntriesPerPage)
+                .Take(PaginatedList<CommentGetModel>.EntriesPerPage);
+            paginatedResult.Entries = result.Select(f => CommentGetModel.FromComment(f)).ToList();
+
+            return paginatedResult;
         }
     }
 }

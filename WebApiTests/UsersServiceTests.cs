@@ -11,15 +11,7 @@
 //{
 //    public class UsersServiceTests
 //    {
-//        private IOptions<AppSettings> config;
-//        [SetUp]
-//        public void Setup()
-//        {
-//            config = Options.Create(new AppSettings
-//            {
-//                Secret = "dsadhjcghduihdfhdifd8ih"
-//            });
-//        }
+//         
 
 //        [Test]
 //        public void ValidRegisterShouldCreateANewUser()

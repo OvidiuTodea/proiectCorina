@@ -13,8 +13,8 @@ namespace WebApplication3.Services
         UserRoleGetModel GetById(int id);
         UserRoleGetModel Delete(int id);
         IEnumerable<UserRoleGetModel> GetAll();
-        UserRoleGetModel Create(UserRolePostModel userRolePostDTO);
-        UserRoleGetModel Upsert(int id, UserRolePostModel userRolePostDTO);
+        UserRoleGetModel Create(UserRolePostModel userRolePostModel);
+        UserRoleGetModel Upsert(int id, UserRolePostModel userRolePostModel);
 
     }
 
@@ -29,9 +29,9 @@ namespace WebApplication3.Services
 
 
 
-        public UserRoleGetModel Create(UserRolePostModel userRolePostDTO)
+        public UserRoleGetModel Create(UserRolePostModel userRolePostModel)
         {
-            UserRole toAdd = UserRolePostModel.ToUserRole(userRolePostDTO);
+            UserRole toAdd = UserRolePostModel.ToUserRole(userRolePostModel);
 
             context.UserRoles.Add(toAdd);
             context.SaveChanges();
@@ -69,18 +69,18 @@ namespace WebApplication3.Services
             return UserRoleGetModel.FromUserRole(userRole);
         }
 
-        public UserRoleGetModel Upsert(int id, UserRolePostModel userRolePostDTO)
+        public UserRoleGetModel Upsert(int id, UserRolePostModel userRolePostModel)
         {
             var existing = context.UserRoles.AsNoTracking().FirstOrDefault(urole => urole.Id == id);
             if (existing == null)
             {
-                UserRole toAdd = UserRolePostModel.ToUserRole(userRolePostDTO);
+                UserRole toAdd = UserRolePostModel.ToUserRole(userRolePostModel);
                 context.UserRoles.Add(toAdd);
                 context.SaveChanges();
                 return UserRoleGetModel.FromUserRole(toAdd);
             }
 
-            UserRole Up = UserRolePostModel.ToUserRole(userRolePostDTO);
+            UserRole Up = UserRolePostModel.ToUserRole(userRolePostModel);
             Up.Id = id;
             context.UserRoles.Update(Up);
             context.SaveChanges();
